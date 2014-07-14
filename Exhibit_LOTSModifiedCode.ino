@@ -14,7 +14,7 @@
 #include "WaveHC.h" //#include "wave.h"
 #include "WaveUtil.h" //#include "util.h"
 
-#define FOG_TIMER_SECS           60
+#define FOG_TIMER_SECS           90
 
 #define NO_HITS_TIMEOUT_SECS  90 
 #define PR_DELTA_THRESHOLD    30
@@ -117,7 +117,6 @@ int PhotoResistor_Int; //Set variable for photoresistor
 int fogState = LOW;             // fogState used to set the fog button
 unsigned long fogPreviousMillis = 0;
 unsigned long currentMillis = 0;
-unsigned long fogInterval = 2000*60; // This is how often to run the fog machine to prime it. 30 * 1000 = 30 Seconds, * 60 = 30 minutes.
 void play(FatReader &dir);
 
 int debugging = 1;  // If true, sends Serial messages useful for debugging
@@ -312,14 +311,17 @@ void loop()
     fogPreviousMillis = currentMillis;   
   }
 
-  if (currentMillis - fogPreviousMillis < 20 * 1000) {fogState = HIGH;} else {fogState = LOW;}  // Every x often (Originally every 30 mins) runs for 10 seconds
+  if (currentMillis > 1800000 && currentMillis < 1810000) {fogPreviousMillis = currentMillis;} // When it first hits a half hour, run it for 10 seconds.
+
+  if (currentMillis - fogPreviousMillis < 5000) {fogState = HIGH;} else {fogState = LOW;}  // Every x often (Originally every 30 mins) runs for 5 seconds
+  
   digitalWrite(FOG_PWR, fogState);
 
   if ( timeSinceLastFog > FOG_TIMER_SECS )
     {
         delay(50);
         digitalWrite(FOG_PWR, HIGH);
-        delay(2000);
+        delay(1000);
         digitalWrite(FOG_PWR, LOW);
         delay(50);
 	lastFogTime = millis(); //[cjb]
