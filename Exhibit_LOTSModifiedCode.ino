@@ -14,7 +14,7 @@
 #include "WaveHC.h" //#include "wave.h"
 #include "WaveUtil.h" //#include "util.h"
 
-#define FOG_TIMER_SECS           30
+#define FOG_TIMER_SECS           60
 
 #define NO_HITS_TIMEOUT_SECS  90 
 #define PR_DELTA_THRESHOLD    30
@@ -116,7 +116,7 @@ int p2_targets_hit_cnt = 0;
 int PhotoResistor_Int; //Set variable for photoresistor
 int fogState = LOW;             // fogState used to set the fog button
 unsigned long fogPreviousMillis = 0;
-
+unsigned long currentMillis = millis();
 void play(FatReader &dir);
 
 int debugging = 1;  // If true, sends Serial messages useful for debugging
@@ -151,7 +151,7 @@ void setup()
   pinMode(buttonPin, INPUT);
   pinMode(btnledPin, OUTPUT);
   
-  Serial.begin(9600);           // set up Serial library at 9600 bps for debugging
+  Serial.begin(115200);           // set up Serial library at 9600 bps for debugging
   
   //// Blink to show startup is running
   digitalWrite( BLUE_STATUS_LED_PIN, HIGH);   // blink the startup led until startup is complete
@@ -282,20 +282,38 @@ void setup()
 
 void loop() 
 {   
-  unsigned long currentMillis = millis();
+  
+  
+  if (debugging){
+    Serial.print("FOG_PWR: ");
+    Serial.println(fogState);
+  
+    Serial.print("currentMillis: ");
+    Serial.println(currentMillis);
+  
+    Serial.print("fogPreviousMillis: ");
+    Serial.println(fogPreviousMillis);
+  
+    Serial.print("currentMillis - fogPreviousMillis: ");
+    Serial.println(currentMillis - fogPreviousMillis);
+    
+    delay(50);
+  }
+  
+  currentMillis = millis();
   
   digitalWrite(FOG_PWR, LOW); //redundant but keep 
   
   timeSinceLastFog = (int)( (float)(millis() - lastFogTime) / 1000.0 );  // millis() - lastFogTime gets us the number of milliseconds since the machine fogged last. Dividing that by 1000.0 converts it to the number of seconds since the machine fogged last. 1000.0 should not be changed, as there will be 1000 milliseconds in a second at least until the end of time, if not longer.
    
-   if(currentMillis - fogPreviousMillis > 30 * 1000 * 60) { // 30 Minutes
+   if(currentMillis - fogPreviousMillis > 30 * 1000 * 60) { // every 30 Minutes
     // save the last time you fogged the machine
     fogPreviousMillis = currentMillis;   
   }
 
-  if (currentMillis - fogPreviousMillis < 30000) {fogState = HIGH;} else {fogState = LOW;}
+  if (currentMillis - fogPreviousMillis < 20000) {fogState = HIGH;} else {fogState = LOW;}  // Every x often runs for 20 seconds
   digitalWrite(FOG_PWR, fogState);
-     
+
   if ( timeSinceLastFog > FOG_TIMER_SECS )
     {
         delay(50);
@@ -508,19 +526,5 @@ void loop()
           }
         }
       }
-   }  
-
-  if (debugging){
-    Serial.print("FOG_PWR: ");
-    Serial.print(fogState);
-  
-    Serial.print("currentMillis: ");
-    Serial.print(currentMilis);
-  
-    Serial.print("fogPreviousMillis: ");
-    Serial.print(fogPreviousMillis);
-  
-    Serial.print("currentMillis - fogPreviousMillis: ");
-    Serial.print(currentMillis - fogPreviousMillis);
-  } 
+   }   
 }
