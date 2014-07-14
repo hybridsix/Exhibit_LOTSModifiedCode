@@ -116,7 +116,8 @@ int p2_targets_hit_cnt = 0;
 int PhotoResistor_Int; //Set variable for photoresistor
 int fogState = LOW;             // fogState used to set the fog button
 unsigned long fogPreviousMillis = 0;
-unsigned long currentMillis = millis();
+unsigned long currentMillis = 0;
+unsigned long fogInterval = 2000*60; // This is how often to run the fog machine to prime it. 30 * 1000 = 30 Seconds, * 60 = 30 minutes.
 void play(FatReader &dir);
 
 int debugging = 1;  // If true, sends Serial messages useful for debugging
@@ -296,7 +297,7 @@ void loop()
   
     Serial.print("currentMillis - fogPreviousMillis: ");
     Serial.println(currentMillis - fogPreviousMillis);
-    
+        
     delay(50);
   }
   
@@ -306,12 +307,12 @@ void loop()
   
   timeSinceLastFog = (int)( (float)(millis() - lastFogTime) / 1000.0 );  // millis() - lastFogTime gets us the number of milliseconds since the machine fogged last. Dividing that by 1000.0 converts it to the number of seconds since the machine fogged last. 1000.0 should not be changed, as there will be 1000 milliseconds in a second at least until the end of time, if not longer.
    
-   if(currentMillis - fogPreviousMillis > 30 * 1000 * 60) { // every 30 Minutes
+   if(currentMillis - fogPreviousMillis > 1800000) { // every so often (30 minutes)
     // save the last time you fogged the machine
     fogPreviousMillis = currentMillis;   
   }
 
-  if (currentMillis - fogPreviousMillis < 20000) {fogState = HIGH;} else {fogState = LOW;}  // Every x often runs for 20 seconds
+  if (currentMillis - fogPreviousMillis < 20 * 1000) {fogState = HIGH;} else {fogState = LOW;}  // Every x often (Originally every 30 mins) runs for 10 seconds
   digitalWrite(FOG_PWR, fogState);
 
   if ( timeSinceLastFog > FOG_TIMER_SECS )
